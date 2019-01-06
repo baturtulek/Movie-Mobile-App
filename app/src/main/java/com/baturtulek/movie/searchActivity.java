@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -30,21 +33,21 @@ import java.util.ArrayList;
 public class searchActivity extends AppCompatActivity {
 
     String query;
+    private EditText edt;
 
-
-    //JSON URL AND KEY
+    //JSON KEY
     private static final String API_KEY = "22d24e5aa0add7939e390c9abfae118f";
     private ArrayList<Movie> movieList = new ArrayList<>();
 
+    //JSON
     private JSONArray movies;
     private JSONObject movie;
     private RequestQueue mRequestQueue;
 
+    //Recycler View
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerAdapter mRecyclerAdapter;
-
-    private EditText edt;
 
     //JSON REQUEST CODE
     public static final String TAG_ID = "id";
@@ -56,7 +59,10 @@ public class searchActivity extends AppCompatActivity {
     public static final String TAG_ADULT = "adult";
     public static final String TAG_PLOT = "overview";
 
+    //Gesture
+    private GestureDetectorCompat mDetector;
 
+    //Navigation Controller
     BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -87,11 +93,15 @@ public class searchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        //Navigation
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         navigation.setSelectedItemId(R.id.navigation_search);
 
         edt = findViewById(R.id.queryText);
+
+        //Gesture
+        mDetector = new GestureDetectorCompat(this, new OnSwipeTouchListener());
 
         //Recycler View
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
@@ -101,7 +111,10 @@ public class searchActivity extends AppCompatActivity {
         //Request Queue
         mRequestQueue = Volley.newRequestQueue(this);
 
-
+    }
+    public boolean onTouchEvent(MotionEvent event) {
+        mDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
     }
 
     public void onClick(View view){
@@ -134,13 +147,70 @@ public class searchActivity extends AppCompatActivity {
         }
     }
 
+    class OnSwipeTouchListener implements GestureDetector.OnGestureListener {
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return false;
+        }
+        @Override
+        public void onShowPress(MotionEvent e) { }
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return false;
+        }
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return false;
+        }
+        @Override
+        public void onLongPress(MotionEvent e) {}
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            onSwipeRight();
+                        } else {
+                            onSwipeLeft();
+                        }
+                        result = true;
+                    }
+                }
+                else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        onSwipeBottom();
+                    } else {
+                        onSwipeTop();
+                    }
+                    result = true;
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return result;
+        }
+        public void onSwipeRight() {}
+        public void onSwipeLeft() {
+            Intent i1 = new Intent(searchActivity.this, MainActivity.class);
+            startActivity(i1);
+        }
+        public void onSwipeTop() {}
+        public void onSwipeBottom() {}
+    }
+
+    //Async Task
     private class getMovies extends AsyncTask<Void,Void,Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 movies = movie.getJSONArray("results");
-
                 for (int i = 0; i < movies.length(); i++) {
                     JSONObject m = movies.getJSONObject(i);
                     int id = m.getInt(TAG_ID);
@@ -156,14 +226,12 @@ public class searchActivity extends AppCompatActivity {
                     //Log.i("object1",m1.toString());
                     movieList.add(m1);
                 }
-
             }
             catch (JSONException ee) {
                 ee.printStackTrace();
             }
             return null;
         }
-
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);

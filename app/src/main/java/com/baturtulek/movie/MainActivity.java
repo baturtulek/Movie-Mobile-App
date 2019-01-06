@@ -5,11 +5,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,17 +34,22 @@ public class MainActivity extends AppCompatActivity {
 
     //JSON URL AND KEY
     private static final String API_KEY = "22d24e5aa0add7939e390c9abfae118f";
-    private static final String MOVIES_URL = "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key="+API_KEY;
+    private static final String MOVIES_URL = "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=" + API_KEY;
 
+    //Json
     private JSONArray movies;
     private JSONObject movie;
     private RequestQueue mRequestQueue;
     private ArrayList<Movie> movieList = new ArrayList<>();
 
+    //Recycler View
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerAdapter mRecyclerAdapter;
-    private BottomNavigationView a;
+
+    //Gesture
+    private GestureDetectorCompat mDetector;
+
     //JSON REQUEST CODE
     public static final String TAG_ID = "id";
     public static final String TAG_NAME = "title";
@@ -52,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG_ADULT = "adult";
     public static final String TAG_PLOT = "overview";
 
+    //Navigation Controller
     BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -59,13 +68,11 @@ public class MainActivity extends AppCompatActivity {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
                     return true;
-
                 case R.id.navigation_search:
                     Intent intent1 = new Intent(MainActivity.this, searchActivity.class);
                     startActivity(intent1);
                     //finish();
                     return true;
-
                 case R.id.navigation_discover:
                     Intent intent2 = new Intent(MainActivity.this, discoverActivity.class);
                     startActivity(intent2);
@@ -77,17 +84,20 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Navigation Controller
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         navigation.setSelectedItemId(R.id.navigation_home);
 
+        //Gesture
+        mDetector = new GestureDetectorCompat(this, new OnSwipeTouchListener());
+
+        //Recycler View
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -110,10 +120,76 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mRequestQueue.add(mJsonObjectRequest);
-
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
 
+    class OnSwipeTouchListener implements GestureDetector.OnGestureListener {
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return false;
+        }
+        @Override
+        public void onShowPress(MotionEvent e) {}
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return false;
+        }
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return false;
+        }
+        @Override
+        public void onLongPress(MotionEvent e) {}
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            onSwipeRight();
+                        } else {
+                            onSwipeLeft();
+                        }
+                        result = true;
+                    }
+                }
+                else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        onSwipeBottom();
+                    } else {
+                        onSwipeTop();
+                    }
+                    result = true;
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return result;
+        }
+        public void onSwipeRight() {
+            Intent i1 = new Intent(MainActivity.this, searchActivity.class);
+            startActivity(i1);
+        }
+
+        public void onSwipeLeft() {
+            Intent i1 = new Intent(MainActivity.this, discoverActivity.class);
+            startActivity(i1);
+        }
+        public void onSwipeTop() {}
+        public void onSwipeBottom() {}
+    }
+
+    //Async Task
     private class getMovies extends AsyncTask<Void,Void,Void>{
         @Override
         protected Void doInBackground(Void... voids) {
@@ -142,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
-
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
@@ -154,8 +229,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 }
 
 
