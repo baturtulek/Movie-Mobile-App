@@ -10,9 +10,9 @@ public class Movie {
     private String original_language;
     private boolean isAdult;
     private String plot;
+    private String imgPath;
 
-
-    public Movie(int id, String name, int voteCount, double voteAvg, String popularity, String original_language, boolean isAdult, String plot) {
+    public Movie(int id, String name, int voteCount, double voteAvg, String popularity, String original_language, boolean isAdult, String plot, String imgP) {
         this.id = id;
         this.name = name;
         this.voteCount = voteCount;
@@ -21,6 +21,7 @@ public class Movie {
         this.original_language = original_language;
         this.isAdult = isAdult;
         this.plot = plot;
+        this.imgPath = imgP;
     }
 
     public int getId() {
@@ -46,12 +47,10 @@ public class Movie {
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
     }
-
     public double getVoteAvg() {
         return voteAvg;
     }
-
-    public void setVoteAvg(float voteAvg) {
+    public void setVoteAvg(double voteAvg) {
         this.voteAvg = voteAvg;
     }
 
@@ -85,6 +84,12 @@ public class Movie {
 
     public void setPlot(String plot) {
         this.plot = plot;
+    }
+    public String getImgPath() {
+        return imgPath;
+    }
+    public void setImgPath(String imgPath) {
+        this.imgPath = imgPath;
     }
 
     @Override

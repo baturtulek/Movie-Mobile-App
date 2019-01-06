@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG_LANG = "original_language";
     public static final String TAG_ADULT = "adult";
     public static final String TAG_PLOT = "overview";
+    public static final String TAG_IMG = "backdrop_path";
 
     //Navigation Controller
     BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -206,8 +207,9 @@ public class MainActivity extends AppCompatActivity {
                     String original_language = m.getString(TAG_LANG);
                     boolean isAdult = m.getBoolean(TAG_ADULT);
                     String plot = m.getString(TAG_PLOT);
+                    String img = m.getString(TAG_IMG);
 
-                    Movie m1 = new Movie(id,name,voteCount,voteAvg,popularity,original_language,isAdult,plot);
+                    Movie m1 = new Movie(id,name,voteCount,voteAvg,popularity,original_language,isAdult,plot,img);
                     //Log.i("object1",m1.toString());
                     movieList.add(m1);
                 }
